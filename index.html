@@ -168,7 +168,8 @@ const tipoBg = t => TILE_BG[Math.max(0,S.tipos.indexOf(t)) % TILE_BG.length];
 const catEmoji = c => S.emo['cats:'+c] || CAT_EMOJI[c] || '💶';
 const ym = d => d.slice(0,7);
 const mesNome = m => { const [y,mo]=m.split('-'); return new Date(y,mo-1,1).toLocaleDateString('pt-PT',{month:'short',year:'2-digit'}); };
-const today = () => new Date().toISOString().slice(0,10);
+// local date (toISOString is UTC and can fall on the previous day/month)
+const today = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const toast = t => { const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),1800); };
 
 // ---------- router ----------
@@ -327,7 +328,7 @@ function sheetDespesa(pre={}){
   let pago = e ? isPago(e) : true;
   const v = sheet(`<h3>${e?'Editar despesa':'Nova despesa'}</h3>
     <div class="seg"><button data-pg="1">✅ Pago</button><button data-pg="0">⏳ Por pagar</button></div>
-    <label class="field">Valor<input id="dValor" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0,00 €" style="font-size:22px" value="${e?e.valor:''}"></label>
+    <label class="field">Valor<input id="dValor" type="text" inputmode="decimal" placeholder="0,00 €" style="font-size:22px" value="${e?String(e.valor).replace('.',','):''}"></label>
     <label class="field">Descrição<input id="dDesc" placeholder="ex.: Fatura da luz" value="${esc(e?e.desc:(pre.desc||''))}"></label>
     <div class="row"><label class="field" style="flex:1">Categoria<select id="dCat">${S.cats.map(c=>`<option ${c===(e?e.cat:pre.cat)?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
       <label class="field" style="flex:1">Data da despesa<input type="date" id="dData" value="${e?e.data:today()}"></label></div>
@@ -347,7 +348,8 @@ function sheetDespesa(pre={}){
   if(!e) q('#dValor').focus();
   if(e) q('#dDel').onclick = () => { if(confirm('Apagar esta despesa?')){ S.despesas=S.despesas.filter(x=>x!==e); save(); v.remove(); render(); } };
   q('#dSave').onclick = () => {
-    const valor = parseFloat(q('#dValor').value);
+    // accept comma or dot as decimal separator
+    const valor = Math.round(parseFloat(q('#dValor').value.replace(/\s|€/g,'').replace(',','.'))*100)/100;
     if(!(valor>0)){ q('#dValor').focus(); return; }
     const cat = q('#dCat').value;
     const d = {data:q('#dData').value||today(), desc:q('#dDesc').value.trim()||cat, cat, valor,
