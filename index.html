@@ -102,6 +102,7 @@
   .st{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
   .st.ok{background:#e1f0e6;color:var(--ok)}
   .st.due{background:#f8ead2;color:#9a5b12}
+  .st:not(.ok):not(.due):not(.late){background:var(--soft);color:var(--muted)}
   .st.late{background:#f6dcd8;color:var(--danger)}
   .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;margin-bottom:12px}
   .seg button{border:none;background:none;font:inherit;padding:10px;border-radius:9px;cursor:pointer;color:var(--muted)}
@@ -441,7 +442,10 @@ function weekStats(w){
   return { c, n:ms.length, plan:plan.length,
     semDoce: plan.filter(d=>!ms.some(x=>x.d===d && x.r.tags.includes('doce'))).length,
     kcal: kd.length ? kd.reduce((a,b)=>a+b,0)/kd.length : 0,
-    ok: MET.filter(m=>metState(m,c[m.k])==='ok').length };
+    // max targets only count once something is planned
+    okMin: MET.filter(m=>m.dir==='min' && metState(m,c[m.k])==='ok').length,
+    okMax: ms.length ? MET.filter(m=>m.dir==='max' && metState(m,c[m.k])==='ok').length : 0,
+    get ok(){ return this.okMin + this.okMax; } };
 }
 // ok | due (min not reached) | late (max exceeded)
 const metState = (m,v) => m.dir==='min' ? (v>=metaOf(m)?'ok':'due') : (v<=metaOf(m)?'ok':'late');
@@ -487,7 +491,7 @@ function vMenu(){
 
 function menuSemana(){
   const st = weekStats(mWeek);
-  const pills = `<div class="chips" data-go-saude style="cursor:pointer">${MET.map(m=>{ const v=st.c[m.k], s=metState(m,v);
+  const pills = `<div class="chips" data-go-saude style="cursor:pointer">${MET.map(m=>{ const v=st.c[m.k], s=st.n?metState(m,v):'';
     return `<span class="st ${s}" style="white-space:nowrap;padding:5px 9px;font-size:12px">${m.e} ${v}/${metaOf(m)}</span>`; }).join('')}</div>`;
   const days = weekDays(mWeek).map((d,i)=>{ const day=S.menu[d]||{};
     const ms = S.slots.flatMap(s=>(day[s]||[]).map(meal).filter(Boolean));
@@ -539,7 +543,8 @@ function menuSaude(){
     <text x="${W-8}" y="${y(meta)-4}" text-anchor="end" style="fill:var(--ink)">meta ${meta}</text>`;
 
   return `<div class="kpis">
-      <div class="kpi dark"><div class="l">Metas cumpridas</div><div class="v">${st.ok} / ${MET.length}</div></div>
+      <div class="kpi dark"><div class="l">Metas cumpridas</div><div class="v">${st.ok} / ${MET.length}</div>
+        <div class="l" style="margin-top:4px">Atingidas ${st.okMin}/${MET.filter(m=>m.dir==='min').length} · No limite ${st.okMax}/${MET.filter(m=>m.dir==='max').length}</div></div>
       <div class="kpi"><div class="l">🍰 Dias sem doces</div><div class="v">${st.semDoce} <span class="qty" style="font-weight:400">de ${st.plan}</span></div></div>
       <div class="kpi"><div class="l">🍽️ Refeições planeadas</div><div class="v">${st.n}</div></div>
       <div class="kpi"><div class="l">🔥 Média kcal / dia</div><div class="v">${st.kcal?Math.round(st.kcal):'—'}</div></div>
