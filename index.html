@@ -84,8 +84,8 @@
   svg text{fill:var(--muted);font-size:10px;font-family:inherit}
   .hidden{display:none!important}
   /* bottom nav */
-  .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:10px 4px calc(12px + env(safe-area-inset-bottom));z-index:10}
-  .tabbar button{background:none;border:none;font:inherit;font-size:12px;color:#a3aca5;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+  .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);padding:10px 2px calc(12px + env(safe-area-inset-bottom));z-index:10}
+  .tabbar button{background:none;border:none;font:inherit;font-size:11px;padding:0;color:#a3aca5;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
   .tabbar svg{width:26px;height:26px;stroke-width:1.4}
   .tabbar button.on{color:var(--ink)}
   .avatar{width:28px;height:28px;border-radius:50%;background:var(--green);color:#f7f1e6;display:grid;place-items:center;font-family:Georgia,serif;font-size:12px}
@@ -111,6 +111,30 @@
   .tip{position:fixed;pointer-events:none;background:var(--green);color:#f7f1e6;padding:5px 8px;border-radius:6px;font-size:12px;display:none;z-index:30}
   .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#f7f1e6;padding:10px 16px;border-radius:999px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none}
   .toast.show{opacity:1}
+  /* menu semanal */
+  .seg.three{grid-template-columns:repeat(3,1fr)}
+  .wnav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;text-align:center;margin-bottom:10px}
+  .linkbtn{background:none;border:none;font:inherit;font-size:12px;color:var(--green-2);text-decoration:underline;cursor:pointer;padding:2px}
+  .day.today{border-color:var(--green-2);box-shadow:0 0 0 1px var(--green-2)}
+  .slot{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+  .slot:last-child{border-bottom:none}
+  .slot .sl{width:96px;flex:none;font-size:12px;color:var(--muted);padding-top:6px}
+  .slot .sm{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .mc{display:inline-flex;align-items:center;gap:2px;background:var(--soft);border-radius:999px;padding:3px 2px 3px 10px;font-size:13px}
+  .mc .x{font-size:12px;padding:2px 6px}
+  .addm{width:28px;height:28px;border-radius:50%;border:1px dashed var(--muted);background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1}
+  .addm:hover{border-color:var(--green);color:var(--green)}
+  .met{display:grid;grid-template-columns:26px 1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .met:last-child{border-bottom:none}
+  .met .e{font-size:18px;grid-row:span 2}
+  .met .n{font-size:14px}
+  .met .c{font-variant-numeric:tabular-nums;font-size:13px;font-weight:600}
+  .bar{grid-column:2 / 4;height:8px;background:var(--soft);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px}
+  .pick{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .pick:hover{background:var(--soft)}
+  .icons{font-size:13px;letter-spacing:1px}
+  .ingr{display:flex;gap:6px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -126,6 +150,7 @@
 <nav class="tabbar" id="tabbar">
   <button data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3.5 10.5L12 4l8.5 6.5V20h-17z"/></svg>Início</button>
   <button data-go="listas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3.5h12v17l-6-4.2-6 4.2z"/></svg>Listas</button>
+  <button data-go="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 3.5v17M4.5 3.5v5a2.5 2.5 0 005 0v-5M17 20.5v-17c-2.2 1-3.5 3.6-3.5 7v3h3.5"/></svg>Menu</button>
   <button data-go="despesas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3.5" y="6" width="17" height="12.5" rx="2"/><path d="M3.5 10h17M7 15h4"/></svg>Despesas</button>
   <button data-go="graficos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9M3 20.5h18"/></svg>Gráficos</button>
   <button data-go="conta"><span class="avatar" id="avatar">C</span>Casa</button>
@@ -147,13 +172,40 @@ const DEFAULT = {
   pessoas:['Eu','Parceiro/a'],
   tipos:['Frutas e legumes','Talho e peixaria','Mercearia','Laticínios','Padaria','Bebidas','Limpeza','Higiene','Outros'],
   cats:['Alimentação','Água','Luz','Gás','Telecomunicações','Renda/Prestação','Condomínio','Transportes','Saúde','Lazer','Outros'],
-  listas:[{id:'l1',nome:'Supermercado',emoji:'🛒'}], produtos:[], despesas:[], acertos:[], emo:{}
+  listas:[{id:'l1',nome:'Supermercado',emoji:'🛒'}], produtos:[], despesas:[], acertos:[], emo:{},
+  slots:['Pequeno-almoço','Almoço','Lanche','Jantar'], refeicoes:[], menu:{}, metas:{}
 };
+// health metrics tracked per planned meal; dir = weekly min or max target
+const MET = [
+  {k:'legumes',n:'Legumes',e:'🥦',dir:'min',def:10},
+  {k:'fruta',n:'Fruta',e:'🍎',dir:'min',def:7},
+  {k:'peixe',n:'Peixe',e:'🐟',dir:'min',def:3},
+  {k:'leguminosas',n:'Leguminosas',e:'🫘',dir:'min',def:3},
+  {k:'integral',n:'Integrais',e:'🌾',dir:'min',def:5},
+  {k:'carne',n:'Carne vermelha',e:'🥩',dir:'max',def:2},
+  {k:'doce',n:'Doces',e:'🍰',dir:'max',def:3},
+  {k:'frito',n:'Fritos',e:'🍟',dir:'max',def:1},
+  {k:'processado',n:'Processados',e:'🌭',dir:'max',def:2}
+];
+const SLOT_EMOJI = {'Pequeno-almoço':'☕','Almoço':'🍽️','Lanche':'🥪','Jantar':'🌙','Ceia':'🍵'};
+const MEAL_EMOJIS = ['🍽️','🥗','🍝','🍲','🥘','🍛','🍜','🐟','🍗','🥩','🍳','🥣','🥪','🌮','🍕','🍔','🥙','🍚','🥞','🍰','🍎','🥤','🫘','🥦'];
+const SEED_MEALS = [
+  {nome:'Papas de aveia com fruta',emoji:'🥣',tags:['integral','fruta'],kcal:350,ing:[{nome:'Flocos de aveia',tipo:'Mercearia'},{nome:'Banana',tipo:'Frutas e legumes'},{nome:'Leite',tipo:'Laticínios'}]},
+  {nome:'Salmão com legumes assados',emoji:'🐟',tags:['peixe','legumes'],kcal:550,ing:[{nome:'Salmão',tipo:'Talho e peixaria'},{nome:'Courgette',tipo:'Frutas e legumes'},{nome:'Pimentos',tipo:'Frutas e legumes'}]},
+  {nome:'Sopa de legumes',emoji:'🍲',tags:['legumes'],kcal:150,ing:[{nome:'Cenoura',tipo:'Frutas e legumes'},{nome:'Abóbora',tipo:'Frutas e legumes'},{nome:'Batata',tipo:'Frutas e legumes'}]},
+  {nome:'Chili de feijão',emoji:'🫘',tags:['leguminosas','legumes'],kcal:500,ing:[{nome:'Feijão vermelho',tipo:'Mercearia'},{nome:'Tomate pelado',tipo:'Mercearia'},{nome:'Cebola',tipo:'Frutas e legumes'}]},
+  {nome:'Bolo de chocolate',emoji:'🍰',tags:['doce'],kcal:400,ing:[]}
+].map((r,i)=>({id:'r'+i, ...r}));
+DEFAULT.refeicoes = SEED_MEALS;
 let S;
 try{ S = JSON.parse(localStorage.getItem(KEY)) || structuredClone(DEFAULT); }catch(e){ S = structuredClone(DEFAULT); }
 // migrate v1 data (no lists)
 if(!S.listas){ S.listas = structuredClone(DEFAULT.listas); }
 if(!S.emo) S.emo = {};
+if(!S.slots) S.slots = structuredClone(DEFAULT.slots);
+if(!S.menu) S.menu = {};
+if(!S.metas) S.metas = {};
+if(!S.refeicoes) S.refeicoes = structuredClone(SEED_MEALS);
 S.produtos.forEach(p=>{ if(!p.lista) p.lista = S.listas[0].id; });
 const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ alert('Não foi possível guardar: '+e.message); } };
 save();
@@ -184,7 +236,7 @@ function render(){
   $('back').style.visibility = route.name==='inicio' ? 'hidden' : 'visible';
   $('avatar').textContent = (S.pessoas[0]||'C')[0].toUpperCase();
   $('topRight').innerHTML = '';
-  ({inicio:vInicio, listas:vListas, lista:vLista, todas:vTodas, despesas:vDespesas, graficos:vGraficos, conta:vConta})[route.name]();
+  ({inicio:vInicio, listas:vListas, lista:vLista, todas:vTodas, menu:vMenu, despesas:vDespesas, graficos:vGraficos, conta:vConta})[route.name]();
 }
 const setTitle = t => $('title').textContent = t;
 
@@ -207,12 +259,17 @@ function vInicio(){
       <div class="kpi"><div class="l">${eu>=0?'Tens a receber':'Tens a pagar'}</div><div class="v" style="color:${eu>=0?'var(--ok)':'var(--danger)'}">${eur(Math.abs(eu))}</div></div>
     </div>
     <div class="cta-shell"><button class="cta" id="qAdd">Nova despesa <span class="plus">+</span></button></div>
+    <div class="sec-title">🍽️ Hoje no menu</div>
+    <div class="card" id="hojeMenu" style="cursor:pointer">${(()=>{ const day=S.menu[today()]||{};
+      const rows=S.slots.filter(s=>(day[s]||[]).some(meal)).map(s=>`<div class="item"><span class="qty" style="width:110px">${slotEmoji(s)} ${esc(s)}</span><span class="t">${day[s].map(meal).filter(Boolean).map(r=>r.emoji+' '+esc(r.nome)).join(', ')}</span></div>`);
+      return rows.length? rows.join('') : '<div class="empty">Nada planeado para hoje — toca para planear.</div>'; })()}</div>
     ${(()=>{ const pp=S.despesas.filter(d=>!isPago(d)).sort((a,b)=>(a.dataPag||'9').localeCompare(b.dataPag||'9'));
       return pp.length? `<div class="sec-title">⏳ Por pagar · ${eur(pp.reduce((s,d)=>s+d.valor,0))}</div>
       <div class="card">${pp.map(d=>`<div class="exp" data-edit="${d.id}" style="cursor:pointer">${expRow(d).replace(/^<div class="exp">|<\/div>$/g,'')}<button class="pay" data-pay="${d.id}">Pagar</button></div>`).join('')}</div>` : ''; })()}
     <div class="sec-title">Últimas despesas</div>
     <div class="card">${recent.length? recent.map(d=>expRow(d).replace('<div class="exp">',`<div class="exp" data-edit="${d.id}" style="cursor:pointer">`)).join('') : '<div class="empty">Ainda sem despesas.</div>'}</div>`;
   $('qAdd').onclick = () => sheetDespesa();
+  $('hojeMenu').onclick = () => { mWeek = monday(today()); mTab = 'semana'; go('menu'); };
   bindExp();
 }
 // old expenses without status count as paid
@@ -361,6 +418,221 @@ function sheetDespesa(pre={}){
   };
 }
 
+// ---------- menu semanal ----------
+const DIAS = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pd = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const addDays = (s,n) => { const d=pd(s); d.setDate(d.getDate()+n); return iso(d); };
+const monday = s => addDays(s, -((pd(s).getDay()+6)%7));
+const weekDays = w => [0,1,2,3,4,5,6].map(i=>addDays(w,i));
+const fmtDay = s => pd(s).toLocaleDateString('pt-PT',{day:'numeric',month:'short'});
+const meal = id => S.refeicoes.find(r=>r.id===id);
+const slotEmoji = s => S.emo['slots:'+s] || SLOT_EMOJI[s] || '🍽️';
+const tagIcons = r => MET.filter(m=>(r.tags||[]).includes(m.k)).map(m=>m.e).join('');
+const metaOf = m => S.metas[m.k] ?? m.def;
+const keep = () => { const y=scrollY; render(); scrollTo(0,y); };
+function weekMeals(w){ const out=[];
+  weekDays(w).forEach(d=>{ const day=S.menu[d]||{}; S.slots.forEach(s=>(day[s]||[]).forEach(id=>{ const r=meal(id); if(r) out.push({d,s,r}); })); });
+  return out; }
+function weekStats(w){
+  const ms = weekMeals(w), days = weekDays(w);
+  const c = Object.fromEntries(MET.map(m=>[m.k, ms.filter(x=>(x.r.tags||[]).includes(m.k)).length]));
+  const kd = days.map(d=>ms.filter(x=>x.d===d).reduce((s,x)=>s+(+x.r.kcal||0),0)).filter(v=>v>0);
+  const plan = days.filter(d=>ms.some(x=>x.d===d));
+  return { c, n:ms.length, plan:plan.length,
+    semDoce: plan.filter(d=>!ms.some(x=>x.d===d && x.r.tags.includes('doce'))).length,
+    kcal: kd.length ? kd.reduce((a,b)=>a+b,0)/kd.length : 0,
+    ok: MET.filter(m=>metState(m,c[m.k])==='ok').length };
+}
+// ok | due (min not reached) | late (max exceeded)
+const metState = (m,v) => m.dir==='min' ? (v>=metaOf(m)?'ok':'due') : (v<=metaOf(m)?'ok':'late');
+const metColor = st => st==='ok' ? 'var(--ok)' : st==='due' ? '#d08a2e' : 'var(--danger)';
+const usage = () => { const u={}; Object.values(S.menu).forEach(day=>Object.values(day).forEach(a=>a.forEach(id=>u[id]=(u[id]||0)+1))); return u; };
+
+let mWeek = monday(today()), mTab = 'semana', tMet = 'legumes', mQ = '';
+function vMenu(){
+  setTitle('Menu semanal');
+  const seg = `<div class="seg three">${[['semana','📅 Semana'],['refeicoes','🍽️ Refeições'],['saude','📊 Saúde']].map(([k,t])=>`<button data-mt="${k}" class="${mTab===k?'on':''}">${t}</button>`).join('')}</div>`;
+  const isNow = mWeek===monday(today());
+  const nav = `<div class="wnav"><button class="icon-btn" data-wk="-7" aria-label="Semana anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div><div style="font-weight:600">${fmtDay(mWeek)} – ${fmtDay(addDays(mWeek,6))}</div>${isNow?'<div class="qty">Esta semana</div>':'<button class="linkbtn" data-wk="0">Ir para esta semana</button>'}</div>
+    <button class="icon-btn" data-wk="7" aria-label="Semana seguinte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5l7 7-7 7"/></svg></button></div>`;
+  let body = '';
+  if(mTab==='semana') body = nav + menuSemana();
+  else if(mTab==='refeicoes') body = menuRefeicoes();
+  else body = nav + menuSaude();
+  $('view').innerHTML = seg + body;
+  const V = $('view');
+  V.querySelectorAll('[data-mt]').forEach(b=>b.onclick=()=>{ mTab=b.dataset.mt; render(); });
+  V.querySelectorAll('[data-wk]').forEach(b=>b.onclick=()=>{ mWeek = +b.dataset.wk ? addDays(mWeek,+b.dataset.wk) : monday(today()); render(); });
+  // semana
+  V.querySelectorAll('[data-madd]').forEach(b=>b.onclick=()=>sheetPickMeal(b.dataset.d, b.dataset.s));
+  V.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ const a=S.menu[b.dataset.d][b.dataset.s]; a.splice(+b.dataset.rm,1); save(); keep(); });
+  V.querySelectorAll('[data-go-saude]').forEach(b=>b.onclick=()=>{ mTab='saude'; render(); });
+  if($('mShop')) $('mShop').onclick = sheetIngredientes;
+  if($('mCopy')) $('mCopy').onclick = () => {
+    if(weekMeals(mWeek).length && !confirm('Substituir o menu desta semana pelo da semana anterior?')) return;
+    weekDays(mWeek).forEach(d=>{ const src=S.menu[addDays(d,-7)]; if(src) S.menu[d]=structuredClone(src); else delete S.menu[d]; });
+    save(); render(); toast('Semana copiada'); };
+  if($('mClear')) $('mClear').onclick = () => { if(!confirm('Limpar o menu desta semana?')) return;
+    weekDays(mWeek).forEach(d=>delete S.menu[d]); save(); render(); };
+  // refeições
+  if($('mNew')) $('mNew').onclick = () => sheetMeal();
+  if($('mSearch')) $('mSearch').oninput = e => { mQ = e.target.value; const p=e.target.selectionStart; render(); $('mSearch').focus(); $('mSearch').setSelectionRange(p,p); };
+  V.querySelectorAll('[data-meal]').forEach(r=>r.onclick=()=>sheetMeal(meal(r.dataset.meal)));
+  // saúde
+  V.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{ tMet=b.dataset.tk; keep(); });
+  V.querySelectorAll('[data-meta]').forEach(inp=>inp.onchange=()=>{ const v=parseInt(inp.value,10);
+    if(v>=0) S.metas[inp.dataset.meta]=v; else delete S.metas[inp.dataset.meta]; save(); keep(); toast('Meta atualizada'); });
+}
+
+function menuSemana(){
+  const st = weekStats(mWeek);
+  const pills = `<div class="chips" data-go-saude style="cursor:pointer">${MET.map(m=>{ const v=st.c[m.k], s=metState(m,v);
+    return `<span class="st ${s}" style="white-space:nowrap;padding:5px 9px;font-size:12px">${m.e} ${v}/${metaOf(m)}</span>`; }).join('')}</div>`;
+  const days = weekDays(mWeek).map((d,i)=>{ const day=S.menu[d]||{};
+    const ms = S.slots.flatMap(s=>(day[s]||[]).map(meal).filter(Boolean));
+    const dots = MET.map(m=>{ const n=ms.filter(r=>r.tags.includes(m.k)).length; return n?`${m.e}${n>1?'<small>'+n+'</small>':''}`:''; }).join(' ');
+    return `<div class="card day ${d===today()?'today':''}">
+      <div class="grp">${DIAS[i]} <span class="qty" style="font-weight:400">${fmtDay(d)}</span>${d===today()?' <span class="tag">Hoje</span>':''}<span class="icons" style="margin-left:auto;font-weight:400">${dots}</span></div>
+      ${S.slots.map(s=>`<div class="slot"><div class="sl">${slotEmoji(s)} ${esc(s)}</div><div class="sm">
+        ${(day[s]||[]).map((id,k)=>{ const r=meal(id); return r?`<span class="mc">${r.emoji} ${esc(r.nome)}<button class="x" data-rm="${k}" data-d="${d}" data-s="${esc(s)}" aria-label="Remover">✕</button></span>`:''; }).join('')}
+        <button class="addm" data-madd data-d="${d}" data-s="${esc(s)}" aria-label="Adicionar refeição">+</button></div></div>`).join('')}
+    </div>`; }).join('');
+  return `${pills}${days}
+    <button class="btn full" id="mShop" style="margin-top:4px">🛒 Passar ingredientes para a lista de compras</button>
+    <div class="row" style="margin-top:8px;flex-wrap:nowrap"><button class="btn ghost" id="mCopy" style="flex:1">Copiar semana anterior</button>
+      <button class="btn ghost" id="mClear" style="flex:1;color:var(--danger);border-color:var(--danger)">Limpar semana</button></div>`;
+}
+
+function menuRefeicoes(){
+  const u = usage(), q = mQ.trim().toLowerCase();
+  const rs = S.refeicoes.filter(r=>!q||r.nome.toLowerCase().includes(q)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  return `<div class="cta-shell"><button class="cta" id="mNew">Nova refeição <span class="plus">+</span></button></div>
+    <input id="mSearch" placeholder="🔍 Procurar refeição…" value="${esc(mQ)}" style="width:100%;margin-bottom:12px">
+    <div class="card">${rs.length? rs.map(r=>`<div class="exp" data-meal="${r.id}" style="cursor:pointer">
+      <div class="dot" style="background:var(--soft)">${r.emoji}</div>
+      <div class="m"><div>${esc(r.nome)}</div><div class="qty">${r.kcal?r.kcal+' kcal · ':''}${(r.ing||[]).length} ingredientes${u[r.id]?' · usada '+u[r.id]+'×':''}</div></div>
+      <div class="icons">${tagIcons(r)}</div></div>`).join('') : '<div class="empty">Sem refeições. Cria a primeira acima.</div>'}</div>
+    <p class="qty" style="text-align:center">Toca numa refeição para a editar. As etiquetas de saúde alimentam as estatísticas.</p>`;
+}
+
+function menuSaude(){
+  const st = weekStats(mWeek);
+  const metas = MET.map(m=>{ const v=st.c[m.k], meta=metaOf(m), s=metState(m,v);
+    const w = Math.min(100, meta ? v/meta*100 : (v?100:0));
+    return `<div class="met"><span class="e">${m.e}</span><span class="n">${m.n} <span class="qty">· ${m.dir==='min'?'mín.':'máx.'} ${meta}</span></span>
+      <span class="c" style="color:${metColor(s)}">${v}${s==='ok'?' ✓':''}</span>
+      <div class="bar"><i style="width:${w}%;background:${metColor(s)}"></i></div></div>`; }).join('');
+
+  // last 8 weeks for one metric
+  const m = MET.find(x=>x.k===tMet) || MET[0];
+  const weeks = [7,6,5,4,3,2,1,0].map(i=>addDays(mWeek,-7*i));
+  const vals = weeks.map(w=>weekStats(w).c[m.k]);
+  const W=440, H=170, pl=30, pb=22, pt=10, meta=metaOf(m);
+  const top = Math.max(4, meta+1, ...vals), bw=(W-pl-6)/weeks.length, y=v=>pt+(H-pt-pb)*(1-v/top);
+  let ch = '';
+  for(let v=0; v<=top; v+=Math.ceil(top/4)) ch+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-5}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+  vals.forEach((v,i)=>{ const x=pl+i*bw+bw*.2, w=bw*.6, s=metState(m,v);
+    ch+=`<rect x="${x}" y="${y(v)}" width="${w}" height="${Math.max(0,H-pb-y(v))}" rx="3" fill="${metColor(s)}" opacity="${weeks[i]===mWeek?1:.55}" data-tip="Semana de ${fmtDay(weeks[i])}: ${v}"/>
+      <text x="${x+w/2}" y="${H-6}" text-anchor="middle">${fmtDay(weeks[i]).replace('.','')}</text>`; });
+  ch += `<line x1="${pl}" x2="${W-6}" y1="${y(meta)}" y2="${y(meta)}" stroke="var(--ink)" stroke-dasharray="4 4"/>
+    <text x="${W-8}" y="${y(meta)-4}" text-anchor="end" style="fill:var(--ink)">meta ${meta}</text>`;
+
+  return `<div class="kpis">
+      <div class="kpi dark"><div class="l">Metas cumpridas</div><div class="v">${st.ok} / ${MET.length}</div></div>
+      <div class="kpi"><div class="l">🍰 Dias sem doces</div><div class="v">${st.semDoce} <span class="qty" style="font-weight:400">de ${st.plan}</span></div></div>
+      <div class="kpi"><div class="l">🍽️ Refeições planeadas</div><div class="v">${st.n}</div></div>
+      <div class="kpi"><div class="l">🔥 Média kcal / dia</div><div class="v">${st.kcal?Math.round(st.kcal):'—'}</div></div>
+    </div>
+    <div class="card"><h2>Metas da semana</h2>${st.n?metas:'<div class="empty">Sem refeições planeadas nesta semana.</div>'}</div>
+    <div class="card"><h2>Últimas 8 semanas</h2>
+      <div class="chips">${MET.map(x=>`<button class="chip ${x.k===m.k?'on':''}" data-tk="${x.k}">${x.e} ${x.n}</button>`).join('')}</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%">${ch}</svg></div>
+    <div class="card"><h2>Ajustar metas semanais</h2>
+      ${MET.map(x=>`<div class="item"><span style="font-size:18px">${x.e}</span><span class="t">${x.n}<div class="qty">${x.dir==='min'?'Pelo menos':'No máximo'} · refeições/semana</div></span>
+        <input type="number" min="0" inputmode="numeric" data-meta="${x.k}" value="${metaOf(x)}" style="width:70px;text-align:center"></div>`).join('')}
+      <p class="qty" style="margin:10px 0 0">Valores indicativos — ajusta-os ao que faz sentido para vocês. As kcal contam só nas refeições onde as preencheste.</p></div>`;
+}
+
+function sheetPickMeal(d, s){
+  const u = usage();
+  const v = sheet(`<h3>${slotEmoji(s)} ${esc(s)} · ${fmtDay(d)}</h3>
+    <input id="pmQ" placeholder="🔍 Procurar ou escrever nova…" style="width:100%">
+    <div id="pmList" style="max-height:46vh;overflow-y:auto;margin:10px 0"></div>
+    <button class="btn ghost full" id="pmNew">＋ Nova refeição</button>`);
+  const q = sel => v.querySelector(sel);
+  const pick = id => { S.menu[d] = S.menu[d]||{}; (S.menu[d][s] = S.menu[d][s]||[]).push(id); save(); v.remove(); keep(); };
+  const draw = () => { const t=q('#pmQ').value.trim().toLowerCase();
+    const rs = S.refeicoes.filter(r=>!t||r.nome.toLowerCase().includes(t)).sort((a,b)=>(u[b.id]||0)-(u[a.id]||0)||a.nome.localeCompare(b.nome,'pt'));
+    q('#pmList').innerHTML = rs.map(r=>`<div class="pick" data-p="${r.id}"><span style="font-size:22px">${r.emoji}</span><span style="flex:1">${esc(r.nome)}<div class="qty">${r.kcal?r.kcal+' kcal':''}</div></span><span class="icons">${tagIcons(r)}</span></div>`).join('')
+      || `<div class="empty">Nenhuma refeição encontrada.</div>`;
+    q('#pmNew').textContent = t ? `＋ Criar «${q('#pmQ').value.trim()}»` : '＋ Nova refeição';
+    v.querySelectorAll('[data-p]').forEach(r=>r.onclick=()=>pick(r.dataset.p)); };
+  q('#pmQ').oninput = draw; draw();
+  q('#pmNew').onclick = () => { const nome=q('#pmQ').value.trim(); v.remove(); sheetMeal(null, r=>pick(r.id), nome); };
+}
+
+function sheetMeal(r, onSave, nomeIni=''){
+  let em = r ? r.emoji : '🍽️';
+  const tags = new Set(r ? r.tags : []);
+  let ing = r ? structuredClone(r.ing||[]) : [];
+  const v = sheet(`<div style="max-height:82vh;overflow-y:auto;margin:-4px;padding:4px"><h3>${r?'Editar refeição':'Nova refeição'}</h3>
+    <div class="row" style="flex-wrap:nowrap"><button class="emo-btn" id="rEmo" style="width:46px;height:46px;font-size:24px">${em}</button>
+      <input id="rNome" placeholder="Nome (ex.: Bacalhau com grão)" value="${esc(r?r.nome:nomeIni)}" style="flex:1"></div>
+    <div class="field" style="margin-top:12px">Etiquetas de saúde
+      <div class="chips" style="flex-wrap:wrap;overflow:visible">${MET.map(m=>`<button class="chip ${tags.has(m.k)?'on':''}" data-t="${m.k}">${m.e} ${m.n}</button>`).join('')}</div></div>
+    <label class="field">Calorias por pessoa (opcional)<input id="rKcal" type="number" inputmode="numeric" min="0" placeholder="ex.: 550" value="${r&&r.kcal?r.kcal:''}"></label>
+    <div class="field">Ingredientes (vão para a lista de compras)<div id="rIng"></div>
+      <button class="btn ghost small" id="rAddIng" style="align-self:flex-start">＋ Ingrediente</button></div>
+    <button class="btn full" id="rSave">${r?'Guardar':'Criar refeição'}</button>
+    ${r?'<button class="btn ghost full" id="rDel" style="margin-top:8px;color:var(--danger);border-color:var(--danger)">Apagar refeição</button>':''}</div>`);
+  const q = sel => v.querySelector(sel);
+  const drawIng = () => { q('#rIng').innerHTML = ing.map((x,i)=>`<div class="ingr"><input data-in="${i}" value="${esc(x.nome)}" placeholder="Ingrediente" style="flex:1">
+      <select data-it="${i}" style="width:42%">${S.tipos.map(t=>`<option ${t===x.tipo?'selected':''}>${esc(t)}</option>`).join('')}</select>
+      <button class="x" data-ix="${i}" aria-label="Remover">✕</button></div>`).join('');
+    v.querySelectorAll('[data-in]').forEach(e=>e.oninput=()=>ing[+e.dataset.in].nome=e.value);
+    v.querySelectorAll('[data-it]').forEach(e=>e.onchange=()=>ing[+e.dataset.it].tipo=e.value);
+    v.querySelectorAll('[data-ix]').forEach(e=>e.onclick=()=>{ ing.splice(+e.dataset.ix,1); drawIng(); }); };
+  drawIng();
+  q('#rAddIng').onclick = () => { ing.push({nome:'',tipo:S.tipos[0]}); drawIng(); v.querySelector(`[data-in="${ing.length-1}"]`).focus(); };
+  q('#rEmo').onclick = () => sheetEmoji(em, e=>{ em=e; q('#rEmo').textContent=e; });
+  v.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ const k=b.dataset.t; tags.has(k)?tags.delete(k):tags.add(k); b.classList.toggle('on'); });
+  if(!r) q('#rNome').focus();
+  if(r) q('#rDel').onclick = () => { if(!confirm('Apagar "'+r.nome+'"? Sai também dos menus.')) return;
+    S.refeicoes = S.refeicoes.filter(x=>x!==r);
+    Object.values(S.menu).forEach(day=>Object.keys(day).forEach(s=>day[s]=day[s].filter(id=>id!==r.id)));
+    save(); v.remove(); keep(); };
+  q('#rSave').onclick = () => { const nome=q('#rNome').value.trim(); if(!nome){ q('#rNome').focus(); return; }
+    const d = {nome, emoji:em, tags:MET.map(m=>m.k).filter(k=>tags.has(k)), kcal:parseInt(q('#rKcal').value,10)||0,
+      ing:ing.filter(x=>x.nome.trim()).map(x=>({nome:x.nome.trim(), tipo:x.tipo}))};
+    let out = r; if(r) Object.assign(r,d); else { out={id:uid(),...d}; S.refeicoes.push(out); }
+    save(); v.remove(); if(onSave) onSave(out); else keep(); toast(r?'Refeição atualizada':'Refeição criada'); };
+}
+
+function sheetIngredientes(){
+  // aggregate ingredients of the week by name
+  const agg = {};
+  weekMeals(mWeek).forEach(({r})=>(r.ing||[]).forEach(x=>{ const k=x.nome.toLowerCase(); (agg[k] = agg[k]||{...x,n:0}).n++; }));
+  const items = Object.values(agg).sort((a,b)=>a.tipo.localeCompare(b.tipo)||a.nome.localeCompare(b.nome,'pt'));
+  if(!items.length) return toast('Sem ingredientes nas refeições desta semana');
+  let lista = S.listas[0].id;
+  const v = sheet(`<h3>Ingredientes da semana</h3>
+    <label class="field">Adicionar à lista<select id="iLista">${S.listas.map(l=>`<option value="${l.id}">${l.emoji} ${esc(l.nome)}</option>`).join('')}</select></label>
+    <div id="iList" style="max-height:44vh;overflow-y:auto;margin-bottom:12px"></div>
+    <button class="btn full" id="iOk">Adicionar</button>`);
+  const q = sel => v.querySelector(sel);
+  const has = x => S.produtos.some(p=>p.lista===lista && !p.feito && p.nome.toLowerCase()===x.nome.toLowerCase());
+  const draw = () => { q('#iList').innerHTML = items.map((x,i)=>`<label class="item"><input type="checkbox" data-ic="${i}" ${has(x)?'':'checked'}>
+      <span class="t">${esc(x.nome)} ${x.n>1?`<span class="qty">· ×${x.n}</span>`:''}${has(x)?' <span class="tag">já na lista</span>':''}</span><span class="qty">${tipoEmoji(x.tipo)}</span></label>`).join(''); };
+  q('#iLista').onchange = e => { lista = e.target.value; draw(); };
+  draw();
+  q('#iOk').onclick = () => { let n=0;
+    v.querySelectorAll('[data-ic]:checked').forEach(c=>{ const x=items[+c.dataset.ic];
+      S.produtos.push({id:uid(), nome:x.nome, qtd:x.n>1?'×'+x.n:'', tipo:x.tipo, lista, feito:false}); n++; });
+    save(); v.remove(); toast(n+' produtos adicionados à lista'); };
+}
+
 // ---------- despesas ----------
 const meses = () => [...new Set(S.despesas.map(d=>ym(d.data)))].sort().reverse();
 let fMes = '', fCat = '', fEst = '';
@@ -470,7 +742,7 @@ function saldos(){
   });
   return bal;
 }
-const emojiOf = (key,x) => key==='tipos' ? tipoEmoji(x) : catEmoji(x);
+const emojiOf = (key,x) => key==='tipos' ? tipoEmoji(x) : key==='slots' ? slotEmoji(x) : catEmoji(x);
 const newEmo = {};
 function vConta(){
   setTitle('Casa');
@@ -493,6 +765,7 @@ function vConta(){
     ${editor('pessoas','Pessoas da casa','Nome')}
     ${editor('tipos','Tipos de produto','ex.: Congelados')}
     ${editor('cats','Categorias de despesa','ex.: Ginásio')}
+    ${editor('slots','Refeições do dia (menu)','ex.: Ceia')}
     <div class="sec-title">Cópia de segurança</div>
     <div class="card"><p class="qty" style="margin-top:0">Os dados ficam neste navegador. Exporta e guarda o ficheiro no Google Drive; noutro dispositivo, importa-o.</p>
       <div class="row"><button class="btn" id="exp">Exportar</button>
