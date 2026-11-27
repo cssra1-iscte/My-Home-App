@@ -91,7 +91,7 @@
   .avatar{width:28px;height:28px;border-radius:50%;background:var(--green);color:#f7f1e6;display:grid;place-items:center;font-family:Georgia,serif;font-size:12px}
   /* sheet */
   .veil{position:fixed;inset:0;background:rgba(6,39,22,.35);z-index:20;display:flex;align-items:flex-end;justify-content:center}
-  .sheet{background:var(--bg);width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));animation:up .2s ease-out}
+  .sheet{background:var(--bg);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));animation:up .2s ease-out}
   @keyframes up{from{transform:translateY(40px);opacity:.4}}
   .sheet h3{margin:0 0 14px;font-weight:400;font-size:19px;text-align:center}
   .emojis{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin:12px 0 16px}
@@ -112,6 +112,8 @@
   .tip{position:fixed;pointer-events:none;background:var(--green);color:#f7f1e6;padding:5px 8px;border-radius:6px;font-size:12px;display:none;z-index:30}
   .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#f7f1e6;padding:10px 16px;border-radius:999px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none}
   .toast.show{opacity:1}
+  .st.fix{background:#e3ebf3;color:#2c4f7c}
+  .chips .sep{flex:none;width:1px;background:var(--line);margin:4px 2px}
   /* menu semanal */
   .seg.three{grid-template-columns:repeat(3,1fr)}
   .wnav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;text-align:center;margin-bottom:10px}
@@ -165,14 +167,14 @@ const KEY = 'casa-app-v1';
 const PALETTE = ['#2f6f5e','#d08a2e','#3a78b5','#c4553f','#7b5ea7','#4f9a8f','#b07a4f','#8a9a3c','#c46a92','#5c6b73','#d4b03a','#2c4f7c'];
 const TILE_BG = ['#e6efe4','#f6e7d2','#e3ebf3','#f4e1dc','#ece6f2','#e1f0ec','#f2e8dc','#eef0dc','#f5e3ec','#e8eaeb'];
 const TIPO_EMOJI = {'Frutas e legumes':'🥦','Talho e peixaria':'🥩','Mercearia':'🥫','Laticínios':'🧀','Padaria':'🥖','Bebidas':'🧃','Limpeza':'🧽','Higiene':'🧴','Congelados':'🧊','Outros':'🛍️'};
-const CAT_EMOJI = {'Alimentação':'🛒','Água':'💧','Luz':'💡','Gás':'🔥','Telecomunicações':'📶','Renda/Prestação':'🏠','Condomínio':'🏢','Transportes':'🚗','Saúde':'💊','Lazer':'🎬','Outros':'📦'};
+const CAT_EMOJI = {'Casa':'🏠','Contas da casa':'💡','Subscrições':'📺','Alimentação':'🛒','Água':'💧','Luz':'💡','Gás':'🔥','Telecomunicações':'📶','Renda/Prestação':'🏠','Condomínio':'🏢','Transportes':'🚗','Saúde':'💊','Lazer':'🎬','Outros':'📦'};
 // emoji picker set (food, home, bills, misc)
 const PICK_EMOJIS = ['🥦','🍎','🍌','🥕','🥬','🍅','🥩','🍗','🐟','🦐','🥚','🧀','🥛','🧈','🍞','🥖','🥐','🍝','🍚','🥫','🫒','🧂','🍪','🍫','☕','🍵','🧃','🥤','🍷','🍺','🧊','🍦','👶','🐶','🐱','🌿','🧽','🧴','🧻','🧼','🪥','💊','🩹','🛒','🛍️','📦','💧','💡','🔥','⚡','📶','📱','💻','📺','🏠','🏢','🔑','🛠️','🚗','⛽','🚌','🚆','🅿️','✈️','🎬','🎮','🎵','📚','🎓','🏋️','⚽','🍽️','🎁','🎉','👕','✂️','💇','🏥','🦷','🧾','💳','🏦','🛡️','💶','📮','🗑️','♻️','🌱','❤️','⭐'];
 const LIST_EMOJIS = ['🛒','🥗','🍝','🎉','🧺','🧹','🍳','🥐','🍷','🎂','🏖️','🎄','👶','🐶','🌿','📦'];
 const DEFAULT = {
   pessoas:['Eu','Parceiro/a'],
   tipos:['Frutas e legumes','Talho e peixaria','Mercearia','Laticínios','Padaria','Bebidas','Limpeza','Higiene','Outros'],
-  cats:['Alimentação','Água','Luz','Gás','Telecomunicações','Renda/Prestação','Condomínio','Transportes','Saúde','Lazer','Outros'],
+  cats:['Casa','Contas da casa','Alimentação','Transportes','Saúde','Lazer','Subscrições','Outros'],
   listas:[{id:'l1',nome:'Supermercado',emoji:'🛒'}], produtos:[], despesas:[], acertos:[], emo:{},
   slots:['Pequeno-almoço','Almoço','Lanche','Jantar'], refeicoes:[], menu:{}, metas:{}
 };
@@ -197,6 +199,26 @@ const SEED_MEALS = [
   {nome:'Bolo de chocolate',emoji:'🍰',tags:['doce'],kcal:400,ing:[]}
 ].map((r,i)=>({id:'r'+i, ...r}));
 DEFAULT.refeicoes = SEED_MEALS;
+// expense types: fixa = recurring (auto-created as pending each period), else one-off
+const FREQ = {1:'Mensal',2:'Bimestral',3:'Trimestral',6:'Semestral',12:'Anual'};
+const SEED_DTIPOS = [
+  {nome:'Renda/Prestação',cat:'Casa',emoji:'🏠',fixa:true,dia:1},
+  {nome:'Condomínio',cat:'Casa',emoji:'🏢',fixa:true,dia:8},
+  {nome:'Seguro da casa',cat:'Casa',emoji:'🛡️',fixa:true,freq:12,dia:1},
+  {nome:'Luz',cat:'Contas da casa',emoji:'💡',fixa:true,dia:10,variavel:true},
+  {nome:'Água',cat:'Contas da casa',emoji:'💧',fixa:true,dia:10,variavel:true},
+  {nome:'Gás',cat:'Contas da casa',emoji:'🔥',fixa:true,dia:10,variavel:true},
+  {nome:'Internet e TV',alias:'Telecomunicações',cat:'Contas da casa',emoji:'📶',fixa:true,dia:5},
+  {nome:'Supermercado',cat:'Alimentação',emoji:'🛒'},
+  {nome:'Restaurantes',cat:'Alimentação',emoji:'🍽️'},
+  {nome:'Combustível',cat:'Transportes',emoji:'⛽'},
+  {nome:'Passe',cat:'Transportes',emoji:'🚆',fixa:true,dia:1},
+  {nome:'Farmácia',cat:'Saúde',emoji:'💊'},
+  {nome:'Consultas',cat:'Saúde',emoji:'🏥'},
+  {nome:'Saídas',cat:'Lazer',emoji:'🎬'},
+  {nome:'Streaming',cat:'Subscrições',emoji:'📺',fixa:true,dia:15},
+  {nome:'Ginásio',cat:'Subscrições',emoji:'🏋️',fixa:true,dia:1}
+];
 let S;
 try{ S = JSON.parse(localStorage.getItem(KEY)) || structuredClone(DEFAULT); }catch(e){ S = structuredClone(DEFAULT); }
 // migrate v1 data (no lists)
@@ -206,6 +228,27 @@ if(!S.slots) S.slots = structuredClone(DEFAULT.slots);
 if(!S.menu) S.menu = {};
 if(!S.metas) S.metas = {};
 if(!S.refeicoes) S.refeicoes = structuredClone(SEED_MEALS);
+migrateTipos();
+// v2 → expense types: old bill categories (Luz, Água…) become fixed types under new categories
+function migrateTipos(){
+  if(!S.skipFix) S.skipFix = [];
+  if(S.dtipos) return;
+  S.dtipos = [];
+  const n = new Date(), cm = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+  const BILL = {'Água':'Contas da casa','Luz':'Contas da casa','Gás':'Contas da casa','Telecomunicações':'Contas da casa','Renda/Prestação':'Casa','Condomínio':'Casa'};
+  const mk = o => { const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), emoji:'', fixa:false, valor:0, freq:1, dia:1, inicio:cm,
+    variavel:false, ativo:true, pagou:S.pessoas[0], part:true, ...o}; delete t.alias; S.dtipos.push(t); return t; };
+  [...S.cats].forEach(c=>{ const to=BILL[c]; if(!to) return;
+    const i=S.cats.indexOf(c);
+    if(S.cats.includes(to)) S.cats.splice(i,1); else S.cats[i]=to;
+    const ds=S.despesas.filter(d=>d.cat===c).sort((a,b)=>a.data.localeCompare(b.data)), last=ds[ds.length-1];
+    const t=mk({nome:c, cat:to, emoji:(S.emo['cats:'+c]||CAT_EMOJI[c]||''), fixa:true, valor:last?last.valor:0, dia:last?+last.data.slice(8,10):1,
+      variavel:['Água','Luz','Gás'].includes(c), pagou:last?last.pagou:S.pessoas[0], part:last?last.part:true});
+    ds.forEach(d=>{ d.tipo=t.id; d.cat=to; d.ref=d.data.slice(0,7); });
+    delete S.emo['cats:'+c];
+  });
+  SEED_DTIPOS.forEach(x=>{ if(S.cats.includes(x.cat) && !S.dtipos.some(t=>t.nome===x.nome||t.nome===x.alias)) mk({...x}); });
+}
 S.produtos.forEach(p=>{ if(!p.lista) p.lista = S.listas[0].id; });
 const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ alert('Não foi possível guardar: '+e.message); } };
 save();
@@ -219,6 +262,26 @@ const tipoEmoji = t => S.emo['tipos:'+t] || TIPO_EMOJI[t] || '🛍️';
 const tipoBg = t => TILE_BG[Math.max(0,S.tipos.indexOf(t)) % TILE_BG.length];
 const catEmoji = c => S.emo['cats:'+c] || CAT_EMOJI[c] || '💶';
 const ym = d => d.slice(0,7);
+const tipoD = id => S.dtipos.find(t=>t.id===id);
+const dtEmoji = t => t.emoji || catEmoji(t.cat);
+const isFixaD = d => { const t = d.tipo && tipoD(d.tipo); return !!(t && t.fixa); };
+const expEmoji = d => { const t = d.tipo && tipoD(d.tipo); return t ? dtEmoji(t) : catEmoji(d.cat); };
+const addMonths = (m,n) => { const [y,mo]=m.split('-').map(Number); const d=new Date(y,mo-1+n,1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); };
+const dueDate = (m,dia) => { const [y,mo]=m.split('-').map(Number); return m+'-'+String(Math.min(dia||1, new Date(y,mo,0).getDate())).padStart(2,'0'); };
+const parseEur = v => Math.round(parseFloat(String(v).replace(/\s|€/g,'').replace(',','.'))*100)/100;
+// create pending expenses for every period of active fixed types, up to the current month
+function genFixas(){
+  const cm = ym(today()); let n = 0;
+  S.dtipos.filter(t=>t.fixa && t.ativo!==false && t.valor>0 && t.inicio).forEach(t=>{
+    for(let m=t.inicio; m<=cm; m=addMonths(m, Math.max(1,+t.freq||1))){
+      if(S.despesas.some(d=>d.tipo===t.id && d.ref===m) || S.skipFix.includes(t.id+':'+m)) continue;
+      const due = dueDate(m, t.dia);
+      S.despesas.push({id:uid(), ts:Date.now(), tipo:t.id, ref:m, auto:true, cat:t.cat, desc:t.nome, valor:t.valor,
+        data:due, pago:false, dataPag:due, pagou:t.pagou||S.pessoas[0], part:t.part!==false}); n++;
+    }
+  });
+  return n;
+}
 const mesNome = m => { const [y,mo]=m.split('-'); return new Date(y,mo-1,1).toLocaleDateString('pt-PT',{month:'short',year:'2-digit'}); };
 // local date (toISOString is UTC and can fall on the previous day/month)
 const today = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
@@ -255,7 +318,7 @@ function vInicio(){
     <div class="kpis">
       <div class="kpi dark"><div class="l">Gasto este mês</div><div class="v">${eur(totalMes)}</div></div>
       <div class="kpi"><div class="l">Por comprar</div><div class="v">${porComprar} <span class="qty" style="font-weight:400">itens</span></div></div>
-      <div class="kpi"><div class="l">Contas fixas (mês)</div><div class="v">${eur(dm.filter(d=>['Água','Luz','Gás','Telecomunicações'].includes(d.cat)).reduce((s,d)=>s+d.valor,0))}</div></div>
+      <div class="kpi"><div class="l">🔁 Despesas fixas (mês)</div><div class="v">${eur(dm.filter(isFixaD).reduce((s,d)=>s+d.valor,0))}</div></div>
       <div class="kpi"><div class="l">${eu>=0?'Tens a receber':'Tens a pagar'}</div><div class="v" style="color:${eu>=0?'var(--ok)':'var(--danger)'}">${eur(Math.abs(eu))}</div></div>
     </div>
     <div class="cta-shell"><button class="cta" id="qAdd">Nova despesa <span class="plus">+</span></button></div>
@@ -278,10 +341,13 @@ const fmtD = s => new Date(s).toLocaleDateString('pt-PT',{day:'numeric',month:'s
 const estado = d => isPago(d)
   ? `<span class="st ok">Pago${d.dataPag?' a '+fmtD(d.dataPag):''}</span>`
   : `<span class="st due ${d.dataPag && d.dataPag<today()?'late':''}">Por pagar${d.dataPag?' · até '+fmtD(d.dataPag):''}</span>`;
-const expRow = d => `<div class="exp"><div class="dot" style="background:${catColor(d.cat)}22">${catEmoji(d.cat)}</div>
-  <div class="m"><div>${esc(d.desc)}</div><div class="qty">${fmtD(d.data)} · ${esc(d.pagou)}${d.part?'':' · pessoal'}</div><div style="margin-top:3px">${estado(d)}</div></div>
+const expRow = d => `<div class="exp"><div class="dot" style="background:${catColor(d.cat)}22">${expEmoji(d)}</div>
+  <div class="m"><div>${esc(d.desc)}</div><div class="qty">${fmtD(d.data)} · ${esc(d.cat)} · ${esc(d.pagou)}${d.part?'':' · pessoal'}</div><div style="margin-top:3px">${estado(d)}${isFixaD(d)?' <span class="st fix">🔁 Fixa</span>':''}</div></div>
   <div class="v">${eur(d.valor)}</div></div>`;
-function marcarPago(id){ const d=S.despesas.find(x=>x.id===id); d.pago=true; d.dataPag=today(); d.ts=Date.now(); save(); render(); toast('Marcada como paga'); }
+function marcarPago(id){ const d=S.despesas.find(x=>x.id===id);
+  const t = d.tipo && tipoD(d.tipo);
+  if(d.auto && t && t.variavel) return sheetDespesa({edit:d, pago:true});
+  d.pago=true; d.dataPag=today(); d.ts=Date.now(); save(); render(); toast('Marcada como paga'); }
 
 // ---------- listas ----------
 function mosaic(l){
@@ -345,7 +411,7 @@ function vLista(){
     const t=$('pTipo').value; save(); render(); $('pTipo').value=t; $('pNome').focus(); };
   $('pAdd').onclick = add; $('pNome').onkeydown = $('pQtd').onkeydown = e=>{ if(e.key==='Enter') add(); };
   if($('pLimpar')) $('pLimpar').onclick = () => { S.produtos=S.produtos.filter(p=>!(p.lista===l.id&&p.feito)); save(); render(); };
-  if($('pPassar')) $('pPassar').onclick = () => sheetDespesa({desc:'Compras — '+l.nome, cat:'Alimentação', after:()=>{ S.produtos=S.produtos.filter(p=>!(p.lista===l.id&&p.feito)); }});
+  if($('pPassar')) $('pPassar').onclick = () => sheetDespesa({desc:'Compras — '+l.nome, cat:'Alimentação', tipo:(S.dtipos.find(t=>t.nome==='Supermercado')||{}).id, after:()=>{ S.produtos=S.produtos.filter(p=>!(p.lista===l.id&&p.feito)); }});
   $('editL').onclick = () => sheetLista(l);
   bindItems();
 }
@@ -380,16 +446,21 @@ function sheetEmoji(cur, onPick){
   v.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{ onPick(b.dataset.e); v.remove(); });
   v.querySelector('#eOk').onclick = () => { const e=v.querySelector('#eFree').value.trim(); if(e){ onPick([...e].slice(0,2).join('')); v.remove(); } };
 }
+const tipoOptions = sel => S.cats.map(c=>{ const ts=S.dtipos.filter(t=>t.cat===c);
+  return ts.length ? `<optgroup label="${esc(catEmoji(c)+' '+c)}">${ts.map(t=>`<option value="${t.id}" ${t.id===sel?'selected':''}>${dtEmoji(t)} ${esc(t.nome)}${t.fixa?' · fixa':''}</option>`).join('')}</optgroup>` : ''; }).join('');
 function sheetDespesa(pre={}){
   const e = pre.edit;
-  let pago = e ? isPago(e) : true;
-  const v = sheet(`<h3>${e?'Editar despesa':'Nova despesa'}</h3>
+  let pago = pre.pago!==undefined ? pre.pago : e ? isPago(e) : true;
+  let tid = e ? (e.tipo||'') : (pre.tipo||'');
+  const v = sheet(`<h3>${pre.pago&&e&&!isPago(e)?'Confirmar valor e pagar':e?'Editar despesa':'Nova despesa'}</h3>
     <div class="seg"><button data-pg="1">✅ Pago</button><button data-pg="0">⏳ Por pagar</button></div>
     <label class="field">Valor<input id="dValor" type="text" inputmode="decimal" placeholder="0,00 €" style="font-size:22px" value="${e?String(e.valor).replace('.',','):''}"></label>
+    <label class="field"><span class="row" style="justify-content:space-between">Tipo de despesa<button class="linkbtn" id="dNovoTipo" type="button">+ Novo tipo</button></span>
+      <select id="dTipo"><option value="">— Outra (escolher categoria) —</option>${tipoOptions(tid)}</select></label>
+    <label class="field" id="dCatW">Categoria<select id="dCat">${S.cats.map(c=>`<option ${c===(e?e.cat:pre.cat)?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
     <label class="field">Descrição<input id="dDesc" placeholder="ex.: Fatura da luz" value="${esc(e?e.desc:(pre.desc||''))}"></label>
-    <div class="row"><label class="field" style="flex:1">Categoria<select id="dCat">${S.cats.map(c=>`<option ${c===(e?e.cat:pre.cat)?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
-      <label class="field" style="flex:1">Data da despesa<input type="date" id="dData" value="${e?e.data:today()}"></label></div>
-    <label class="field"><span id="lPag"></span><input type="date" id="dPagData" value="${e&&e.dataPag?e.dataPag:''}"></label>
+    <div class="row"><label class="field" style="flex:1">Data da despesa<input type="date" id="dData" value="${e?e.data:today()}"></label>
+      <label class="field" style="flex:1"><span id="lPag"></span><input type="date" id="dPagData" value="${e&&e.dataPag?e.dataPag:''}"></label></div>
     <div class="row"><label class="field" style="flex:1"><span id="lQuem"></span><select id="dPagou">${S.pessoas.map(p=>`<option ${e&&e.pagou===p?'selected':''}>${esc(p)}</option>`).join('')}</select></label>
       <label class="row" style="gap:6px;flex:1;padding-top:14px"><input type="checkbox" id="dPart" ${!e||e.part?'checked':''}> Partilhada</label></div>
     <button class="btn full" id="dSave" style="margin-top:6px">Guardar despesa</button>
@@ -401,21 +472,114 @@ function sheetDespesa(pre={}){
     q('#lQuem').textContent = pago ? 'Quem pagou' : 'Quem vai pagar';
     if(pago && !q('#dPagData').value) q('#dPagData').value = today(); };
   v.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{ if(!pago && b.dataset.pg==='1') q('#dPagData').value=''; setPago(b.dataset.pg==='1'); });
+  if(pre.pago && e && !isPago(e)) q('#dPagData').value = today();
   setPago(pago);
+  // picking a type fills category and defaults
+  let prevNome = '';
+  const applyTipo = (fill) => { tid = q('#dTipo').value; const t = tid && tipoD(tid);
+    q('#dCatW').classList.toggle('hidden', !!t);
+    if(!t) return;
+    q('#dCat').value = t.cat;
+    if(!fill) { prevNome = t.nome; return; }
+    const dd = q('#dDesc'); if(!dd.value.trim() || dd.value===prevNome) dd.value = t.nome; prevNome = t.nome;
+    if(!q('#dValor').value && t.valor>0) q('#dValor').value = String(t.valor).replace('.',',');
+    if(t.pagou && S.pessoas.includes(t.pagou)) q('#dPagou').value = t.pagou;
+    q('#dPart').checked = t.part!==false; };
+  q('#dTipo').onchange = () => applyTipo(!e);
+  applyTipo(!e && !pre.desc);
+  q('#dNovoTipo').onclick = () => sheetTipo(null, {cat:q('#dCat').value}, t => { q('#dTipo').innerHTML = '<option value="">— Outra (escolher categoria) —</option>'+tipoOptions(t.id); applyTipo(true); });
   if(!e) q('#dValor').focus();
-  if(e) q('#dDel').onclick = () => { if(confirm('Apagar esta despesa?')){ S.despesas=S.despesas.filter(x=>x!==e); save(); v.remove(); render(); } };
+  if(e) q('#dDel').onclick = () => { if(!confirm('Apagar esta despesa?')) return;
+    // keep a deleted recurring expense from being recreated
+    if(e.tipo && e.ref && isFixaD(e)) S.skipFix.push(e.tipo+':'+e.ref);
+    S.despesas=S.despesas.filter(x=>x!==e); save(); v.remove(); render(); };
   q('#dSave').onclick = () => {
-    // accept comma or dot as decimal separator
-    const valor = Math.round(parseFloat(q('#dValor').value.replace(/\s|€/g,'').replace(',','.'))*100)/100;
+    const valor = parseEur(q('#dValor').value);
     if(!(valor>0)){ q('#dValor').focus(); return; }
-    const cat = q('#dCat').value;
-    const d = {data:q('#dData').value||today(), desc:q('#dDesc').value.trim()||cat, cat, valor,
+    const t = tid && tipoD(tid);
+    const cat = t ? t.cat : q('#dCat').value;
+    const d = {data:q('#dData').value||today(), desc:q('#dDesc').value.trim()||(t?t.nome:cat), cat, valor, tipo:t?t.id:undefined,
       pagou:q('#dPagou').value, part:q('#dPart').checked, pago, dataPag:q('#dPagData').value||(pago?today():'')};
-    if(e){ if(pago && !isPago(e)) d.ts=Date.now(); Object.assign(e,d); }
-    else S.despesas.push({id:uid(), ts:Date.now(), ...d});
+    if(t && t.fixa) d.ref = (e && e.tipo===t.id && e.ref) ? e.ref : ym(d.data);
+    else { d.ref = undefined; d.auto = undefined; }
+    if(e){ if(e.ref && e.tipo && e.tipo!==d.tipo) S.skipFix.push(e.tipo+':'+e.ref);
+      if(pago && !isPago(e)) d.ts=Date.now(); Object.assign(e,d); }
+    else{
+      // registering a fixed bill fills that period's pending entry instead of duplicating it
+      const prev = t && t.fixa && S.despesas.find(x=>x.tipo===t.id && x.ref===d.ref && !isPago(x));
+      if(prev){ Object.assign(prev, d, {ts:Date.now()}); if(pre.after) pre.after(); save(); v.remove(); render(); return toast('Atualizada a despesa prevista de '+mesNome(d.ref)); }
+      S.despesas.push({id:uid(), ts:Date.now(), ...d});
+    }
     if(pre.after) pre.after();
     save(); v.remove(); render(); toast(e?'Despesa atualizada':'Despesa guardada');
   };
+}
+function sheetTipo(t, pre={}, onSaved){
+  let em = t ? t.emoji : '', fixa = t ? !!t.fixa : !!pre.fixa;
+  const cat0 = t ? t.cat : (S.cats.includes(pre.cat) ? pre.cat : S.cats[0]);
+  const v = sheet(`<h3>${t?'Editar tipo de despesa':'Novo tipo de despesa'}</h3>
+    <div class="seg"><button data-fx="0">1️⃣ Única</button><button data-fx="1">🔁 Fixa</button></div>
+    <p class="qty" id="fxHint" style="margin:-4px 4px 12px"></p>
+    <div class="row" style="margin-bottom:10px"><button class="emo-btn" id="tEmo" type="button"></button><input id="tNome" placeholder="ex.: Luz, Ginásio, Supermercado" style="flex:1" value="${esc(t?t.nome:'')}"></div>
+    <label class="field">Categoria<select id="tCat">${S.cats.map(c=>`<option ${c===cat0?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+    <div id="fxBox">
+      <div class="row"><label class="field" style="flex:1">Valor previsto<input id="tValor" inputmode="decimal" placeholder="0,00 €" value="${t&&t.valor?String(t.valor).replace('.',','):''}"></label>
+        <label class="field" style="flex:1">Periodicidade<select id="tFreq">${Object.entries(FREQ).map(([k,n])=>`<option value="${k}" ${+k===(t?+t.freq||1:1)?'selected':''}>${n}</option>`).join('')}</select></label></div>
+      <div class="row"><label class="field" style="flex:1">Dia de pagamento<input id="tDia" type="number" min="1" max="31" inputmode="numeric" value="${t?t.dia||1:1}"></label>
+        <label class="field" style="flex:1">Começa em<input id="tIni" type="month" value="${t&&t.inicio?t.inicio:ym(today())}"></label></div>
+      <label class="row" style="gap:8px;margin-bottom:10px;font-size:14px"><input type="checkbox" id="tVar" ${t&&t.variavel?'checked':''}> Valor variável (confirmo o valor real ao pagar)</label>
+      ${t?`<label class="row" style="gap:8px;margin-bottom:10px;font-size:14px"><input type="checkbox" id="tAtivo" ${t.ativo!==false?'checked':''}> Ativa — criar despesas automaticamente</label>`:''}
+    </div>
+    <div class="row"><label class="field" style="flex:1">Quem paga normalmente<select id="tPagou">${S.pessoas.map(p=>`<option ${t&&t.pagou===p?'selected':''}>${esc(p)}</option>`).join('')}</select></label>
+      <label class="row" style="gap:6px;flex:1;padding-top:14px"><input type="checkbox" id="tPart" ${!t||t.part!==false?'checked':''}> Partilhada</label></div>
+    <button class="btn full" id="tSave" style="margin-top:6px">Guardar tipo</button>
+    ${t?'<button class="btn ghost full" id="tDel" style="margin-top:8px;color:var(--danger);border-color:var(--danger)">Apagar tipo</button>':''}`);
+  const q = sel => v.querySelector(sel);
+  const drawEmo = () => q('#tEmo').textContent = em || catEmoji(q('#tCat').value);
+  const setFixa = val => { fixa = val;
+    v.querySelectorAll('[data-fx]').forEach(b=>b.classList.toggle('on', (b.dataset.fx==='1')===fixa));
+    q('#fxBox').classList.toggle('hidden', !fixa);
+    q('#fxHint').textContent = fixa ? 'Repete-se: em cada período a app cria a despesa como “por pagar”, com o valor previsto.' : 'Para gastos pontuais — escolhes o tipo sempre que registas uma despesa.'; };
+  v.querySelectorAll('[data-fx]').forEach(b=>b.onclick=()=>setFixa(b.dataset.fx==='1'));
+  setFixa(fixa); drawEmo();
+  q('#tCat').onchange = drawEmo;
+  q('#tEmo').onclick = () => sheetEmoji(em, x=>{ em=x; drawEmo(); });
+  if(!t) q('#tNome').focus();
+  if(t) q('#tDel').onclick = () => {
+    if(!confirm(`Apagar o tipo "${t.nome}"?\nAs despesas já registadas ficam guardadas (sem tipo); as previstas por pagar são removidas.`)) return;
+    S.despesas = S.despesas.filter(d=>!(d.tipo===t.id && d.auto && !isPago(d)));
+    S.despesas.forEach(d=>{ if(d.tipo===t.id){ delete d.tipo; delete d.ref; delete d.auto; } });
+    S.dtipos = S.dtipos.filter(x=>x!==t); save(); v.remove(); render(); toast('Tipo apagado'); };
+  q('#tSave').onclick = () => {
+    const nome = q('#tNome').value.trim(); if(!nome) return q('#tNome').focus();
+    const valor = parseEur(q('#tValor').value) || 0;
+    const o = {nome, emoji:em, cat:q('#tCat').value, fixa, valor, freq:+q('#tFreq').value, dia:Math.min(31,Math.max(1,parseInt(q('#tDia').value)||1)),
+      inicio:q('#tIni').value||ym(today()), variavel:q('#tVar').checked, ativo:t&&q('#tAtivo')?q('#tAtivo').checked:true,
+      pagou:q('#tPagou').value, part:q('#tPart').checked};
+    let x = t;
+    if(t){ Object.assign(t,o);
+      S.despesas.filter(d=>d.tipo===t.id).forEach(d=>{ d.cat=t.cat;
+        // keep pending projections in sync with the type
+        if(d.auto && !isPago(d)){ d.desc=t.nome; d.valor=t.valor||d.valor; d.data=d.dataPag=dueDate(d.ref,t.dia); d.pagou=t.pagou; d.part=t.part; } });
+      if(!t.fixa) S.despesas.forEach(d=>{ if(d.tipo===t.id){ delete d.ref; } });
+    } else { x = {id:uid(), ...o}; S.dtipos.push(x); }
+    const n = genFixas();
+    save(); v.remove();
+    toast((t?'Tipo atualizado':'Tipo criado') + (n?` · ${n} por pagar criada${n>1?'s':''}`:'') + (fixa&&!(valor>0)?' · define o valor para ativar':''));
+    if(onSaved) onSaved(x); else render();
+  };
+}
+function sheetCat(){
+  let em = '';
+  const v = sheet(`<h3>Nova categoria</h3>
+    <div class="row"><button class="emo-btn" id="cEmo" type="button">➕</button><input id="cNome" placeholder="ex.: Animais, Educação" style="flex:1"></div>
+    <button class="btn full" id="cSave" style="margin-top:14px">Criar categoria</button>`);
+  const q = sel => v.querySelector(sel);
+  q('#cNome').focus();
+  q('#cEmo').onclick = () => sheetEmoji(em, x=>{ em=x; q('#cEmo').textContent=x; });
+  q('#cSave').onclick = () => { const n=q('#cNome').value.trim(); if(!n) return;
+    if(S.cats.includes(n)) return alert('Essa categoria já existe.');
+    S.cats.push(n); if(em) S.emo['cats:'+n]=em; save(); v.remove(); render(); toast('Categoria criada'); };
 }
 
 // ---------- menu semanal ----------
@@ -639,25 +803,60 @@ function sheetIngredientes(){
 
 // ---------- despesas ----------
 const meses = () => [...new Set(S.despesas.map(d=>ym(d.data)))].sort().reverse();
-let fMes = '', fCat = '', fEst = '';
+let fMes = '', fCat = '', fEst = '', fNat = '', dTab = 'lista';
+const segDesp = () => `<div class="seg"><button data-dt="lista" class="${dTab==='lista'?'on':''}">🧾 Despesas</button><button data-dt="tipos" class="${dTab==='tipos'?'on':''}">🗂️ Tipos e categorias</button></div>`;
+const bindSegDesp = () => $('view').querySelectorAll('[data-dt]').forEach(b=>b.onclick=()=>{ dTab=b.dataset.dt; render(); window.scrollTo(0,0); });
 function vDespesas(){
   setTitle('Despesas');
-  const rows = S.despesas.filter(d=>(!fMes||ym(d.data)===fMes)&&(!fCat||d.cat===fCat)&&(!fEst||(fEst==='pago')===isPago(d))).sort((a,b)=>b.data.localeCompare(a.data));
+  if(dTab==='tipos') return vTiposDespesa();
+  const rows = S.despesas.filter(d=>(!fMes||ym(d.data)===fMes)&&(!fCat||d.cat===fCat)&&(!fEst||(fEst==='pago')===isPago(d))&&(!fNat||(fNat==='fixa')===isFixaD(d))).sort((a,b)=>b.data.localeCompare(a.data));
   const porPagar = S.despesas.filter(d=>!isPago(d)).reduce((s,d)=>s+d.valor,0);
-  $('view').innerHTML = `
+  $('view').innerHTML = `${segDesp()}
     <div class="cta-shell"><button class="cta" id="dNew">Nova despesa <span class="plus">+</span></button></div>
     <div class="chips"><button class="chip ${!fMes?'on':''}" data-m="">Tudo</button>${meses().map(m=>`<button class="chip ${fMes===m?'on':''}" data-m="${m}">${mesNome(m)}</button>`).join('')}</div>
     <div class="chips"><button class="chip ${!fCat?'on':''}" data-c="">Todas</button>${S.cats.map(c=>`<button class="chip ${fCat===c?'on':''}" data-c="${esc(c)}">${catEmoji(c)} ${esc(c)}</button>`).join('')}</div>
-    <div class="chips">${[['','Todas'],['porpagar','⏳ Por pagar'],['pago','✅ Pagas']].map(([k,t])=>`<button class="chip ${fEst===k?'on':''}" data-st="${k}">${t}</button>`).join('')}</div>
+    <div class="chips">${[['','Todas'],['porpagar','⏳ Por pagar'],['pago','✅ Pagas']].map(([k,t])=>`<button class="chip ${fEst===k?'on':''}" data-st="${k}">${t}</button>`).join('')}<span class="sep"></span>
+      ${[['fixa','🔁 Fixas'],['unica','1️⃣ Únicas']].map(([k,t])=>`<button class="chip ${fNat===k?'on':''}" data-nat="${k}">${t}</button>`).join('')}</div>
     <div class="kpis"><div class="kpi dark"><div class="l">Total ${fMes?mesNome(fMes):''} ${fCat?'· '+esc(fCat):''}</div><div class="v">${eur(rows.reduce((s,d)=>s+d.valor,0))}</div></div>
       <div class="kpi"><div class="l">⏳ Por pagar (tudo)</div><div class="v" style="color:${porPagar?'#9a5b12':'inherit'}">${eur(porPagar)}</div></div></div>
     <div class="card">${rows.length? rows.map(d=>`<div class="exp" data-edit="${d.id}" style="cursor:pointer">${expRow(d).replace(/^<div class="exp">|<\/div>$/g,'')}${isPago(d)?'':`<button class="pay" data-pay="${d.id}">Pagar</button>`}</div>`).join('') : '<div class="empty">Sem despesas.</div>'}</div>
     <p class="qty" style="text-align:center">Toca numa despesa para a editar ou apagar.</p>`;
+  bindSegDesp();
   $('dNew').onclick = () => sheetDespesa();
   $('view').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ fMes=b.dataset.m; render(); });
   $('view').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ fCat=b.dataset.c; render(); });
   $('view').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{ fEst=b.dataset.st; render(); });
+  $('view').querySelectorAll('[data-nat]').forEach(b=>b.onclick=()=>{ fNat = fNat===b.dataset.nat ? '' : b.dataset.nat; render(); });
   bindExp();
+}
+function vTiposDespesa(){
+  const fixas = S.dtipos.filter(t=>t.fixa && t.ativo!==false && t.valor>0);
+  const mensal = fixas.reduce((s,t)=>s+t.valor/(+t.freq||1),0);
+  const mes = ym(today());
+  const gastoMes = t => S.despesas.filter(d=>d.tipo===t.id && ym(d.data)===mes).reduce((s,d)=>s+d.valor,0);
+  const row = t => { const g = gastoMes(t);
+    const info = t.fixa
+      ? `🔁 ${FREQ[t.freq]||'Mensal'} · dia ${t.dia||1}${t.variavel?' · valor variável':''}`
+      : `Única${g?' · '+eur(g)+' este mês':''}`;
+    const st = !t.fixa ? '' : t.ativo===false ? '<span class="st">Pausada</span>' : !(t.valor>0) ? '<span class="st due">Define o valor</span>' : '';
+    return `<div class="exp" data-tp="${t.id}" style="cursor:pointer"><div class="dot" style="background:${catColor(t.cat)}22">${dtEmoji(t)}</div>
+      <div class="m"><div>${esc(t.nome)}</div><div class="qty">${info}</div>${st?`<div style="margin-top:3px">${st}</div>`:''}</div>
+      <div class="v">${t.fixa&&t.valor>0?(t.variavel?'~':'')+eur(t.valor):''}</div></div>`; };
+  $('view').innerHTML = `${segDesp()}
+    <div class="cta-shell"><button class="cta" id="tNew">Novo tipo de despesa <span class="plus">+</span></button></div>
+    <div class="kpis"><div class="kpi dark"><div class="l">🔁 Fixas por mês (previsto)</div><div class="v">${eur(mensal)}</div></div>
+      <div class="kpi"><div class="l">Tipos</div><div class="v">${S.dtipos.filter(t=>t.fixa).length} <span class="qty" style="font-weight:400">fixos</span> · ${S.dtipos.filter(t=>!t.fixa).length} <span class="qty" style="font-weight:400">únicos</span></div></div></div>
+    ${S.cats.map(c=>{ const ts=S.dtipos.filter(t=>t.cat===c).sort((a,b)=>(b.fixa-a.fixa)||a.nome.localeCompare(b.nome));
+      return `<div class="card"><div class="grp" style="margin-bottom:6px"><span class="e" style="background:${catColor(c)}22">${catEmoji(c)}</span>${esc(c)}<span class="qty" style="margin-left:auto;font-weight:400">${ts.length} tipo${ts.length===1?'':'s'}</span></div>
+        ${ts.map(row).join('') || '<div class="qty" style="padding:6px 0">Sem tipos nesta categoria.</div>'}
+        <button class="linkbtn" data-addt="${esc(c)}" style="margin-top:6px">+ Adicionar tipo em ${esc(c)}</button></div>`; }).join('')}
+    <button class="btn ghost full" id="cNew">+ Nova categoria</button>
+    <p class="qty" style="text-align:center">As despesas fixas aparecem como “por pagar” na data de pagamento de cada período. Emojis e remoção de categorias em Casa → Definições.</p>`;
+  bindSegDesp();
+  $('tNew').onclick = () => sheetTipo(null, {cat:fCat});
+  $('cNew').onclick = () => sheetCat();
+  $('view').querySelectorAll('[data-addt]').forEach(b=>b.onclick=()=>sheetTipo(null,{cat:b.dataset.addt}));
+  $('view').querySelectorAll('[data-tp]').forEach(r=>r.onclick=()=>sheetTipo(tipoD(r.dataset.tp)));
 }
 function bindExp(){
   $('view').querySelectorAll('[data-pay]').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); marcarPago(b.dataset.pay); });
@@ -670,7 +869,7 @@ document.addEventListener('mousemove', e => { const t=e.target.dataset && e.targ
   if(t){ tip.textContent=t; tip.style.display='block'; tip.style.left=Math.min(e.clientX+12, innerWidth-180)+'px'; tip.style.top=(e.clientY+12)+'px'; } else tip.style.display='none'; });
 function last12(){ const out=[]; const d=new Date(); for(let i=11;i>=0;i--){ const x=new Date(d.getFullYear(),d.getMonth()-i,1); out.push(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')); } return out; }
 function niceStep(max){ const raw=max/4, p=Math.pow(10,Math.floor(Math.log10(raw))), n=raw/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; }
-let gMes = '', lCat = 'Luz';
+let gMes = '', lSel = '';
 function vGraficos(){
   setTitle('Gráficos');
   const L = last12();
@@ -679,7 +878,13 @@ function vGraficos(){
   const byCat = {}; ds.forEach(d=>byCat[d.cat]=(byCat[d.cat]||0)+d.valor);
   const ents = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   const nMeses = gMes ? 1 : Math.max(1, new Set(ds.map(d=>ym(d.data))).size);
-  if(!S.cats.includes(lCat)) lCat = S.cats[0];
+  // line chart: a fixed type (t:id) or a whole category (c:name)
+  const fixT = S.dtipos.filter(t=>t.fixa);
+  const okSel = x => x && (x.startsWith('t:') ? !!tipoD(x.slice(2)) : S.cats.includes(x.slice(2)));
+  if(!okSel(lSel)){ const t = fixT.find(t=>S.despesas.some(d=>d.tipo===t.id)) || fixT[0]; lSel = t ? 't:'+t.id : 'c:'+S.cats[0]; }
+  const inSel = d => lSel.startsWith('t:') ? d.tipo===lSel.slice(2) : d.cat===lSel.slice(2);
+  const lColor = catColor(lSel.startsWith('t:') ? tipoD(lSel.slice(2)).cat : lSel.slice(2));
+  const fixTot = ds.filter(isFixaD).reduce((s,d)=>s+d.valor,0);
 
   // donut
   let donut = '';
@@ -710,29 +915,29 @@ function vGraficos(){
     bars+=`<text x="${x+w/2}" y="${H-6}" text-anchor="middle">${mesNome(d.m).split(' ')[0].replace('.','')}</text>`; });
 
   // line for one category
-  const vals = L.map(m=>S.despesas.filter(d=>ym(d.data)===m && d.cat===lCat).reduce((s,d)=>s+d.valor,0));
+  const vals = L.map(m=>S.despesas.filter(d=>ym(d.data)===m && inSel(d)).reduce((s,d)=>s+d.valor,0));
   const lmax=Math.max(10,...vals), ls=niceStep(lmax), ltop=Math.ceil(lmax/ls)*ls, LH=180;
   const px=i=>pl+(W-pl-16)*i/(L.length-1), py=v=>pt+(LH-pt-pb)*(1-v/ltop);
   let line='';
   for(let v=0; v<=ltop; v+=ls){ line+=`<line x1="${pl}" x2="${W-6}" y1="${py(v)}" y2="${py(v)}" stroke="var(--line)"/><text x="${pl-5}" y="${py(v)+3}" text-anchor="end">${v}€</text>`; }
-  line += `<polyline fill="none" stroke="${catColor(lCat)}" stroke-width="2.4" stroke-linejoin="round" points="${vals.map((v,i)=>px(i)+','+py(v)).join(' ')}"/>`;
-  vals.forEach((v,i)=>{ line+=`<circle cx="${px(i)}" cy="${py(v)}" r="4.5" fill="${catColor(lCat)}" data-tip="${mesNome(L[i])}: ${eur(v)}"/><text x="${px(i)}" y="${LH-6}" text-anchor="middle">${mesNome(L[i]).split(' ')[0].replace('.','')}</text>`; });
+  line += `<polyline fill="none" stroke="${lColor}" stroke-width="2.4" stroke-linejoin="round" points="${vals.map((v,i)=>px(i)+','+py(v)).join(' ')}"/>`;
+  vals.forEach((v,i)=>{ line+=`<circle cx="${px(i)}" cy="${py(v)}" r="4.5" fill="${lColor}" data-tip="${mesNome(L[i])}: ${eur(v)}"/><text x="${px(i)}" y="${LH-6}" text-anchor="middle">${mesNome(L[i]).split(' ')[0].replace('.','')}</text>`; });
 
   $('view').innerHTML = `
     <div class="chips"><button class="chip ${!gMes?'on':''}" data-m="">12 meses</button>${meses().map(m=>`<button class="chip ${gMes===m?'on':''}" data-m="${m}">${mesNome(m)}</button>`).join('')}</div>
     <div class="kpis">
       <div class="kpi dark"><div class="l">Total gasto</div><div class="v">${eur(total)}</div></div>
       <div class="kpi"><div class="l">Média mensal</div><div class="v">${eur(total/nMeses)}</div></div>
-      <div class="kpi"><div class="l">🛒 Alimentação</div><div class="v">${eur(byCat['Alimentação']||0)}</div></div>
-      <div class="kpi"><div class="l">💡 Água·Luz·Gás·Net</div><div class="v">${eur(['Água','Luz','Gás','Telecomunicações'].reduce((s,c)=>s+(byCat[c]||0),0))}</div></div>
+      <div class="kpi"><div class="l">🔁 Fixas</div><div class="v">${eur(fixTot)}</div></div>
+      <div class="kpi"><div class="l">1️⃣ Únicas</div><div class="v">${eur(total-fixTot)}</div></div>
     </div>
     <div class="card"><h2>Por categoria</h2>${donut}</div>
     <div class="card"><h2>Mês a mês</h2><svg viewBox="0 0 ${W} ${H}" style="width:100%">${bars}</svg></div>
-    <div class="card"><h2>Evolução de uma conta</h2>
-      <div class="chips">${S.cats.map(c=>`<button class="chip ${lCat===c?'on':''}" data-lc="${esc(c)}">${catEmoji(c)} ${esc(c)}</button>`).join('')}</div>
+    <div class="card"><h2>Evolução</h2>
+      <div class="chips">${fixT.map(t=>`<button class="chip ${lSel==='t:'+t.id?'on':''}" data-lc="t:${t.id}">${dtEmoji(t)} ${esc(t.nome)}</button>`).join('')}${fixT.length?'<span class="sep"></span>':''}${S.cats.map(c=>`<button class="chip ${lSel==='c:'+c?'on':''}" data-lc="c:${esc(c)}">${catEmoji(c)} ${esc(c)}</button>`).join('')}</div>
       <svg viewBox="0 0 ${W} ${LH}" style="width:100%">${line}</svg></div>`;
   $('view').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ gMes=b.dataset.m; render(); });
-  $('view').querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{ lCat=b.dataset.lc; render(); });
+  $('view').querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{ lSel=b.dataset.lc; render(); });
 }
 
 // ---------- conta (balances + settings) ----------
@@ -778,6 +983,7 @@ function vConta(){
   if($('acertar')) $('acertar').onclick = () => { if(confirm('Confirmas que as contas foram acertadas?')){ S.acertos.push(Date.now()); save(); render(); } };
   $('view').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ const k=b.dataset.k;
     if(S[k].length<=1) return alert('Tem de existir pelo menos um.');
+    if(k==='cats' && S.dtipos.some(t=>t.cat===S[k][b.dataset.i])) return alert('Esta categoria tem tipos de despesa. Muda-os de categoria ou apaga-os primeiro (Despesas → Tipos e categorias).');
     if(confirm('Remover "'+S[k][b.dataset.i]+'"?')){ delete S.emo[k+':'+S[k][b.dataset.i]]; S[k].splice(+b.dataset.i,1); save(); render(); } });
   $('view').querySelectorAll('[data-emo]').forEach(b=>b.onclick=()=>{ const k=b.dataset.emo, x=S[k][b.dataset.i];
     sheetEmoji(emojiOf(k,x), e=>{ S.emo[k+':'+x]=e; save(); const y=scrollY; render(); scrollTo(0,y); toast('Emoji atualizado'); }); });
@@ -788,15 +994,18 @@ function vConta(){
   const download = (name, text, type) => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click(); };
   $('exp').onclick = () => download('casa-backup-'+today()+'.json', JSON.stringify(S,null,2), 'application/json');
   $('exCsv').onclick = () => download('despesas-'+today()+'.csv',
-    '﻿Data;Descrição;Categoria;Pagou;Partilhada;Estado;Data pagamento;Valor\n'+S.despesas.map(d=>[d.data,d.desc,d.cat,d.pagou,d.part?'Sim':'Não',isPago(d)?'Pago':'Por pagar',d.dataPag||'',String(d.valor).replace('.',',')].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(';')).join('\n'), 'text/csv');
+    '﻿Data;Descrição;Categoria;Tipo;Natureza;Pagou;Partilhada;Estado;Data pagamento;Valor\n'+S.despesas.map(d=>[d.data,d.desc,d.cat,(d.tipo&&tipoD(d.tipo)||{}).nome||'',isFixaD(d)?'Fixa':'Única',d.pagou,d.part?'Sim':'Não',isPago(d)?'Pago':'Por pagar',d.dataPag||'',String(d.valor).replace('.',',')].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(';')).join('\n'), 'text/csv');
   $('imp').onchange = e => { const f=e.target.files[0]; if(!f) return;
     f.text().then(t=>{ const d=JSON.parse(t); if(!d.despesas||!d.produtos) throw 0;
       if(confirm('Substituir os dados atuais pelos do ficheiro?')){ S={...structuredClone(DEFAULT),...d}; if(!S.listas.length) S.listas=structuredClone(DEFAULT.listas);
-        S.produtos.forEach(p=>{ if(!p.lista) p.lista=S.listas[0].id; }); save(); render(); toast('Dados importados'); } })
+        S.produtos.forEach(p=>{ if(!p.lista) p.lista=S.listas[0].id; }); migrateTipos(); genFixas(); save(); render(); toast('Dados importados'); } })
      .catch(()=>alert('Ficheiro inválido.')); };
 }
 
+genFixas(); save();
 render();
+// app resumed in a new month: create that month's fixed expenses
+document.addEventListener('visibilitychange', () => { if(!document.hidden && genFixas()){ save(); render(); } });
 // offline support
 if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js');
 </script>
